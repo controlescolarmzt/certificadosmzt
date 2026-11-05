@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Documentos Académicos</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; color: #000; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .header-title { text-align: center; font-weight: bold; flex-grow: 1; }
+        .header-title h1 { font-size: 18px; margin: 0; }
+        .header-title h2 { font-size: 16px; margin: 5px 0 0; }
+
+        .date-box { border: 2px solid #000; display: flex; flex-direction: column; width: 150px; font-weight: bold; }
+        .date-box div { padding: 5px; border-bottom: 2px solid #000; font-size: 12px; }
+        .date-box input { border: none; padding: 5px; text-align: center; font-weight: bold; font-family: inherit; outline: none; background: transparent; }
+
+        .row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .field { display: flex; flex-direction: column; border: 2px solid #000; flex: 1; min-width: 120px; }
+        .field label { border-bottom: 2px solid #000; padding: 5px; font-size: 11px; font-weight: bold; }
+        .field input, .field select { border: none; padding: 8px 5px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; background: transparent; }
+        .editable { background-color: #f9f9f9; color: #000; text-transform: uppercase; }
+
+        .nivel-autodetectado { background-color: #e8f5e9 !important; transition: background-color 0.5s; }
+        .nivel-warning { border-color: #f44336 !important; }
+        #nivelWarning { font-size: 11px; color: #f44336; font-weight: bold;
+            padding: 3px 6px; display: none; background: #fff3f3;
+            border-radius: 4px; margin-top: 2px; }
+
+        .section-title { font-size: 12px; font-weight: bold; margin-top: 30px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: flex-end; }
+        .cycle-box { border: 2px solid #000; display: flex; flex-direction: column; width: 150px; }
+        .cycle-box label { border-bottom: 2px solid #000; padding: 5px; font-size: 11px; font-weight: bold; }
+        .cycle-box input { border: none; padding: 5px; outline: none; text-align: center; }
+
+        .obs-container { margin-top: 20px; }
+        .obs-container label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 10px; }
+        .obs-container textarea { width: 100%; height: 100px; border: 1px solid #ccc; outline: none;
+            resize: none; font-family: Arial; font-size: 12px; padding: 5px; }
+
+        .footer { margin-top: 100px; text-align: center; }
+        .signature-line { border-top: 2px solid #000; width: 50%; margin: 0 auto 10px; }
+        .signature-text { font-size: 12px; font-weight: bold; }
+        .privacy-text { font-size: 11px; margin-top: 20px; text-align: left; font-weight: bold; }
+
+        .controls { margin-top: 30px; padding: 15px; background: #eef; text-align: center; border-radius: 8px; }
+        .btn { padding: 10px 20px; margin: 0 10px; font-size: 14px; font-weight: bold;
+            cursor: pointer; border: none; border-radius: 5px; color: white; }
+        .btn-send { background-color: #28a745; }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Toggle Foráneo */
+        .foraneo-bar {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 10px; padding: 6px 10px;
+            background: #fff8e1; border: 2px solid #f9a825;
+            border-radius: 6px; width: fit-content;
+        }
+        .foraneo-bar label { font-size: 12px; font-weight: bold; color: #e65100; cursor: pointer; }
+        .toggle-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; border-radius: 22px; transition: .3s;
+        }
+        .toggle-slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px;
+            left: 3px; bottom: 3px; background-color: white;
+            border-radius: 50%; transition: .3s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background-color: #f9a825; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        .foraneo-active { background-color: #fff9e6 !important; }
+
+        @media print {
+            .foraneo-bar { display: none !important; }
+            .controls { display: none !important; }
+            #nivelWarning { display: none !important; }
+            body { padding: 0; }
+            input, select, textarea { border: none !important; appearance: none;
+                -webkit-appearance: none; background: transparent !important; }
+            .obs-container textarea { border: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxN_Sq7TSHeQbcTWgzlQ1BMYEgXKBoSRUKRjvDqnyFmq0gnbLQpiITb6mEJ5bmiuQFsOw/exec";
+    </script>
+
+    <!-- ==================== FORMULARIO ==================== -->
+    <div class="header">
+        <div style="width: 250px;">
+            <img src="https://portal.sepyc.gob.mx/Imagenes/logos%20SEPyC%20COLOR%20HORI.png"
+                 alt="SEPyC" style="max-width: 250px;">
+        </div>
+        <div class="header-title">
+            <h1>SOLICITUD DE</h1>
+            <h1>DOCUMENTOS ACADÉMICOS</h1>
+            <h2>DE EDUCACIÓN BÁSICA</h2>
+        </div>
+        <div class="date-box">
+            <div>FECHA:</div>
+            <input type="text" id="fecha" readonly>
+        </div>
+    </div>
+
+    <!-- DATOS DE SOLICITUD -->
+    <div class="row">
+        <div class="field"><label>SOLICITA</label><input type="text" id="solicita" value="MAZATLAN" readonly></div>
+        <div class="field"><label>ATIENDE</label><input type="text" id="atiende" value="ARCHIVO SINALOA" readonly></div>
+        <div class="field">
+            <label>TRAMITE:</label>
+            <select id="tramite" class="editable">
+                <option value="CERTIF. TOTAL">CERTIF. TOTAL</option>
+                <option value="CERTIF. TOTAL CON CORRECCION">CERTIF. TOTAL CON CORRECCION</option>
+                <option value="CERTIF. PARCIAL">CERTIF. PARCIAL</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>NIVEL:</label>
+            <select id="nivel" class="editable" onchange="verificarNivelManual()">
+                <option value="PRIMARIA">PRIMARIA</option>
+                <option value="SECUNDARIA">SECUNDARIA</option>
+            </select>
+            <div id="nivelWarning">⚠️ La clave no corresponde a este nivel</div>
+        </div>
+    </div>
+
+    <!-- DATOS PERSONALES -->
+    <div class="row">
+        <div class="field"><label>NOMBRE(S):</label><input type="text" id="nombre" class="editable"></div>
+        <div class="field"><label>APELLIDO PAT.:</label><input type="text" id="apellidoPat" class="editable"></div>
+        <div class="field"><label>APELLIDO MAT.:</label><input type="text" id="apellidoMat" class="editable"></div>
+        <div class="field"><label>CURP:</label><input type="text" id="curp" maxlength="18" class="editable"></div>
+        <div class="field"><label>TELEFONO</label><input type="text" id="telefono" class="editable"></div>
+    </div>
+
+    <!-- DATOS DE LA ESCUELA -->
+    <div class="foraneo-bar">
+        <label for="toggleForaneo">🏫 FORÁNEO:</label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggleForaneo" onchange="activarForaneo(this.checked)">
+            <span class="toggle-slider"></span>
+        </label>
+        <label for="toggleForaneo" id="foraneoLabel" style="color:#999; font-weight:normal;">OFF</label>
+    </div>
+
+    <div class="section-title">
+        <span>DATOS DE LA ESCUELA:</span>
+        <div class="cycle-box">
+            <label>CICLO:</label>
+            <input type="text" id="ciclo" list="listaCiclos" placeholder="Ej. 2018-2019" class="editable">
+            <datalist id="listaCiclos"></datalist>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="field">
+            <label>CLAVE:</label>
+            <input type="text" id="clave" list="listaClaves" class="editable">
+            <datalist id="listaClaves"></datalist>
+        </div>
+        <div class="field">
+            <label>NOMBRE:</label>
+            <input type="text" id="nombreEscuela" list="listaNombres" class="editable">
+            <datalist id="listaNombres"></datalist>
+        </div>
+        <div class="field"><label>TURNO:</label><input type="text" id="turno" class="editable"></div>
+        <div class="field"><label>ENTIDAD:</label><input type="text" id="entidad" readonly tabindex="-1"></div>
+        <div class="field"><label>LOCALIDAD:</label><input type="text" id="localidad" readonly tabindex="-1"></div>
+    </div>
+
+    <div class="obs-container">
+        <label>OBSERVACIONES:</label>
+        <textarea id="observaciones" class="editable"></textarea>
+    </div>
+
+    <div class="footer">
+        <div class="signature-line"></div>
+        <div class="signature-text">FIRMA DEL SOLICITANTE</div>
+        <p class="privacy-text">Sus datos personales se encuentran protegidos y seran tratados solo para los fines que se establecen en nuestras politicas de privacidad, mismas que se pueden consultar por internet en www.sepyc.gob.mx</p>
+    </div>
+
+    <!-- BOTÓN ÚNICO -->
+    <div class="controls no-print">
+        <button class="btn btn-send" id="btnEnviarImprimir" onclick="enviarEImprimir()">🖨️ Enviar e Imprimir</button>
+        <p id="statusMsg" style="margin-top:10px; font-weight:bold;"></p>
+    </div>
+
+    <script>
+        // ============================================================
+        //  MAPA DE NIVELES POR CÓDIGO DE CLAVE (posiciones 2, 3, 4)
+        // ============================================================
+        const NIVEL_POR_CODIGO = {
+            'DPR': 'PRIMARIA',   'EPR': 'PRIMARIA',   'PPR': 'PRIMARIA',   'SPR': 'PRIMARIA',
+            'DES': 'SECUNDARIA', 'EES': 'SECUNDARIA', 'PES': 'SECUNDARIA', 'SES': 'SECUNDARIA',
+            'DST': 'SECUNDARIA', 'EST': 'SECUNDARIA', 'PST': 'SECUNDARIA',
+            'DTV': 'SECUNDARIA', 'PTV': 'SECUNDARIA'
+        };
+
+        function detectarNivel(clave) {
+            if (!clave || clave.length < 5) return null;
+            return NIVEL_POR_CODIGO[clave.substring(2, 5).toUpperCase()] || null;
+        }
+
+        // 1. FECHA ACTUAL
+        const today = new Date();
+        document.getElementById('fecha').value =
+            String(today.getDate()).padStart(2,'0') + '/' +
+            String(today.getMonth()+1).padStart(2,'0') + '/' +
+            today.getFullYear();
+
+        // 2. CICLOS ESCOLARES
+        const datalistCiclos = document.getElementById('listaCiclos');
+        for (let anio = 2018; anio >= 1960; anio--) {
+            let opt = document.createElement('option');
+            opt.value = `${anio}-${anio + 1}`;
+            datalistCiclos.appendChild(opt);
+        }
+
+        // 3. CARGA JSON
+        let escuelasDB = [];
+        const listaClaves  = document.getElementById('listaClaves');
+        const listaNombres = document.getElementById('listaNombres');
+
+        fetch('escuelas.json')
+            .then(r => r.json())
+            .then(data => {
+                escuelasDB = data;
+                escuelasDB.forEach(escuela => {
+                    if (escuela.clave && escuela.clave !== 'nan') {
+                        let optC = document.createElement('option');
+                        optC.value = escuela.clave;
+                        listaClaves.appendChild(optC);
+                    }
+                    if (escuela.centro) {
+                        let optN = document.createElement('option');
+                        optN.value = escuela.centro;
+                        listaNombres.appendChild(optN);
+                    }
+                });
+            })
+            .catch(err => console.error("No se pudo cargar escuelas.json.", err));
+
+        // ─── MODO FORÁNEO ────────────────────────────────────────────
+        let modoForaneo = false;
+
+        function activarForaneo(activo) {
+            modoForaneo = activo;
+            document.getElementById('foraneoLabel').textContent = activo ? 'ON' : 'OFF';
+            document.getElementById('foraneoLabel').style.color = activo ? '#e65100' : '#999';
+
+            const atiendeInput = document.getElementById('atiende');
+            atiendeInput.value = activo ? 'ARCHIVO OTROS ESTADOS' : 'ARCHIVO SINALOA';
+
+            const campos = ['clave','nombreEscuela','turno','entidad','localidad'];
+            campos.forEach(id => {
+                const input = document.getElementById(id);
+                if (activo) {
+                    input.removeAttribute('readonly');
+                    input.setAttribute('tabindex', '0');
+                    input.classList.add('editable', 'foraneo-active');
+                    // Deshabilitar datalist en modo foráneo
+                    if (id === 'clave')         input.removeAttribute('list');
+                    if (id === 'nombreEscuela') input.removeAttribute('list');
+                } else {
+                    // Restaurar estado original
+                    if (id === 'entidad' || id === 'localidad') {
+                        input.setAttribute('readonly', '');
+                        input.setAttribute('tabindex', '-1');
+                    }
+                    input.classList.remove('foraneo-active');
+                    if (id === 'clave')         input.setAttribute('list', 'listaClaves');
+                    if (id === 'nombreEscuela') input.setAttribute('list', 'listaNombres');
+                    // Limpiar campos de escuela al desactivar
+                    input.value = '';
+                }
+            });
+        }
+
+        // ─── FIN MODO FORÁNEO ─────────────────────────────────────────
+
+        // 4. REFERENCIAS
+        const claveInput     = document.getElementById('clave');
+        const nombreInput    = document.getElementById('nombreEscuela');
+        const turnoInput     = document.getElementById('turno');
+        const entidadInput   = document.getElementById('entidad');
+        const localidadInput = document.getElementById('localidad');
+        const nivelSelect    = document.getElementById('nivel');
+        const nivelWarning   = document.getElementById('nivelWarning');
+
+        // 5. APLICA NIVEL AL SELECT
+        function aplicarNivel(clave) {
+            const nivelDetectado = detectarNivel(clave);
+            if (nivelDetectado) {
+                nivelSelect.value = nivelDetectado;
+                nivelSelect.classList.add('nivel-autodetectado');
+                setTimeout(() => nivelSelect.classList.remove('nivel-autodetectado'), 2000);
+                nivelWarning.style.display = 'none';
+                nivelSelect.parentElement.classList.remove('nivel-warning');
+            }
+        }
+
+        // 6. VERIFICA NIVEL MANUAL
+        function verificarNivelManual() {
+            const nivelDetectado = detectarNivel(claveInput.value.trim());
+            if (nivelDetectado && nivelDetectado !== nivelSelect.value) {
+                nivelWarning.style.display = 'block';
+                nivelSelect.parentElement.classList.add('nivel-warning');
+            } else {
+                nivelWarning.style.display = 'none';
+                nivelSelect.parentElement.classList.remove('nivel-warning');
+            }
+        }
+
+        // 7. AUTOCOMPLETADO
+        function autocompletar(esPorClave) {
+            if (modoForaneo) return;   // en modo foráneo no se autocompleta
+            let match;
+            if (esPorClave) {
+                const val = claveInput.value.trim().toUpperCase();
+                match = escuelasDB.find(e => e.clave && e.clave.toUpperCase() === val);
+            } else {
+                const val = nombreInput.value.trim().toUpperCase();
+                const candidatos = escuelasDB.filter(e => e.centro && e.centro.toUpperCase() === val);
+                match = candidatos.find(e => detectarNivel(e.clave) === nivelSelect.value) || candidatos[0];
+            }
+            if (match) {
+                claveInput.value     = match.clave;
+                nombreInput.value    = match.centro;
+                turnoInput.value     = match.turno;
+                entidadInput.value   = match.entidad || match.municipio || "SINALOA";
+                localidadInput.value = match.localidad;
+                aplicarNivel(match.clave);
+            }
+        }
+
+        claveInput.addEventListener('input', () => {
+            if (modoForaneo) return;
+            const val = claveInput.value.trim().toUpperCase();
+            const matchExacto = escuelasDB.find(e => e.clave && e.clave.toUpperCase() === val);
+            if (matchExacto) {
+                autocompletar(true);
+            } else {
+                aplicarNivel(val);
+            }
+        });
+
+        nombreInput.addEventListener('input', () => autocompletar(false));
+
+        // 8. ENVIAR E IMPRIMIR
+        function enviarEImprimir() {
+            const statusMsg = document.getElementById('statusMsg');
+            const btn       = document.getElementById('btnEnviarImprimir');
+
+            if (!claveInput.value.trim()) {
+                statusMsg.style.color = "red";
+                statusMsg.innerText   = "⚠️ Ingresa la clave de la escuela antes de continuar.";
+                return;
+            }
+
+            const nivelDetectado = detectarNivel(claveInput.value.trim());
+            if (nivelDetectado && nivelDetectado !== nivelSelect.value) {
+                const continuar = confirm(
+                    `⚠️ La clave ingresada corresponde a ${nivelDetectado}, ` +
+                    `pero el nivel seleccionado es ${nivelSelect.value}.\n\n` +
+                    `¿Deseas continuar de todas formas?`
+                );
+                if (!continuar) return;
+            }
+
+            btn.disabled          = true;
+            statusMsg.style.color = "blue";
+            statusMsg.innerText   = "📤 Enviando datos a Google Sheets...";
+
+            const payload = {
+                fecha:         document.getElementById('fecha').value,
+                atiende:       document.getElementById('atiende').value,
+                tramite:       document.getElementById('tramite').value.toUpperCase(),
+                nivel:         nivelSelect.value.toUpperCase(),
+                apellidoPat:   document.getElementById('apellidoPat').value.toUpperCase(),
+                apellidoMat:   document.getElementById('apellidoMat').value.toUpperCase(),
+                nombre:        document.getElementById('nombre').value.toUpperCase(),
+                curp:          document.getElementById('curp').value.toUpperCase(),
+                telefono:      document.getElementById('telefono').value,
+                email:         "",
+                ciclo:         document.getElementById('ciclo').value,
+                nombreEscuela: nombreInput.value.toUpperCase(),
+                clave:         claveInput.value.toUpperCase(),
+                turno:         turnoInput.value.toUpperCase(),
+                entidad:       entidadInput.value.toUpperCase(),
+                localidad:     localidadInput.value.toUpperCase(),
+                blank1:        "",
+                blank2:        "",
+                blank3:        "",
+                observaciones: document.getElementById('observaciones').value.toUpperCase(),
+                foraneo:       modoForaneo ? "SÍ" : "NO"
+            };
+
+            fetch(GOOGLE_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.text())
+            .then(() => {
+                statusMsg.style.color = "green";
+                statusMsg.innerText   = "✅ Datos enviados correctamente. Abriendo impresión...";
+                setTimeout(() => {
+                    window.print();
+                    statusMsg.innerText = "";
+                    btn.disabled = false;
+                }, 1500);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                statusMsg.style.color = "red";
+                statusMsg.innerText   = "❌ Error al enviar los datos. Revisa tu conexión.";
+                btn.disabled = false;
+                if (confirm("No se pudieron enviar los datos a Sheets.\n¿Deseas imprimir de todas formas?")) {
+                    window.print();
+                }
+            });
+        }
+    </script>
+
+<!-- INICIO: buscador flotante; el formulario original no se modifica -->
+<style>
+#abrirBuscadorEscuelas{position:fixed;right:20px;bottom:20px;z-index:10000;padding:12px 18px;border:0;border-radius:8px;background:#667eea;color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 4px 18px #0003}
+#ventanaBuscadorEscuelas{position:fixed;right:20px;bottom:78px;width:min(960px,calc(100vw - 40px));height:min(720px,calc(100dvh - 110px));z-index:10001;background:#fff;border:1px solid #ddd;border-radius:12px;overflow:hidden;box-shadow:0 12px 45px #0004;display:flex;flex-direction:column}
+#ventanaBuscadorEscuelas[hidden]{display:none!important}
+#barraBuscadorEscuelas{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#667eea;color:white;font:600 14px Arial,sans-serif}
+#minimizarBuscadorEscuelas{padding:7px 10px;background:#fff;color:#4454b6;border:0;border-radius:5px;cursor:pointer;font:14px Arial,sans-serif}
+#marcoBuscadorEscuelas{display:block;flex:1;width:100%;min-height:0;border:0;background:white}
+@media(max-width:600px){#ventanaBuscadorEscuelas{right:10px;bottom:72px;width:calc(100vw - 20px);height:calc(100dvh - 92px)}#abrirBuscadorEscuelas{right:10px;bottom:14px}}
+@media print{#abrirBuscadorEscuelas,#ventanaBuscadorEscuelas{display:none!important}}
+</style>
+<button type="button" id="abrirBuscadorEscuelas" aria-controls="ventanaBuscadorEscuelas" aria-expanded="false">Buscar escuela</button>
+<div id="ventanaBuscadorEscuelas" role="region" aria-label="Buscador de centros de trabajo" hidden>
+    <div id="barraBuscadorEscuelas"><span>Buscador de escuelas</span><button type="button" id="minimizarBuscadorEscuelas" aria-label="Minimizar buscador de escuelas">&#8722; Minimizar</button></div>
+    <iframe id="marcoBuscadorEscuelas" title="Buscador de Centros de Trabajo - Sinaloa" data-src="ESCUELAS.html"></iframe>
+</div>
+<script>
+(() => {
+    const abrir = document.getElementById('abrirBuscadorEscuelas');
+    const ventana = document.getElementById('ventanaBuscadorEscuelas');
+    const minimizar = document.getElementById('minimizarBuscadorEscuelas');
+    const marco = document.getElementById('marcoBuscadorEscuelas');
+    function mostrar(activa, devolverFoco = false) {
+        if (activa && !marco.hasAttribute('src')) marco.src = marco.dataset.src;
+        ventana.hidden = !activa;
+        abrir.setAttribute('aria-expanded', String(activa));
+        abrir.textContent = activa ? 'Minimizar buscador' : 'Buscar escuela';
+        if (activa) minimizar.focus();
+        else if (devolverFoco) abrir.focus();
+    }
+    abrir.addEventListener('click', () => mostrar(ventana.hidden));
+    minimizar.addEventListener('click', () => mostrar(false, true));
+    document.addEventListener('pointerdown', evento => {
+        if (!ventana.hidden && !ventana.contains(evento.target) && !abrir.contains(evento.target)) mostrar(false);
+    });
+    function alPresionarTecla(evento) {
+        if (evento.key === 'Escape' && !ventana.hidden) {
+            evento.preventDefault();
+            mostrar(false, true);
+        }
+    }
+    document.addEventListener('keydown', alPresionarTecla);
+    marco.addEventListener('load', () => {
+        try { marco.contentDocument.addEventListener('keydown', alPresionarTecla); } catch (_) {}
+    });
+})();
+</script>
+<!-- FIN: buscador flotante -->
+</body>
+</html>
