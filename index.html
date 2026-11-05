@@ -185,9 +185,10 @@
         <p class="privacy-text">Sus datos personales se encuentran protegidos y seran tratados solo para los fines que se establecen en nuestras politicas de privacidad, mismas que se pueden consultar por internet en www.sepyc.gob.mx</p>
     </div>
 
-    <!-- BOTÓN ÚNICO -->
+    <!-- GUARDAR / GUARDAR E IMPRIMIR -->
     <div class="controls no-print">
-        <button class="btn btn-send" id="btnEnviarImprimir" onclick="enviarEImprimir()">🖨️ Enviar e Imprimir</button>
+        <button type="button" class="btn btn-send" id="btnGuardar" onclick="guardarSolicitud(false)">💾 Guardar</button>
+        <button type="button" class="btn btn-send" id="btnEnviarImprimir" onclick="enviarEImprimir()">🖨️ Guardar e imprimir</button>
         <p id="statusMsg" style="margin-top:10px; font-weight:bold;"></p>
     </div>
 
@@ -354,8 +355,18 @@
 
         // 8. ENVIAR E IMPRIMIR
         function enviarEImprimir() {
+            return guardarSolicitud(true);
+        }
+
+        function guardarSolicitud(imprimir = false) {
             const statusMsg = document.getElementById('statusMsg');
             const btn       = document.getElementById('btnEnviarImprimir');
+            const btnGuardar = document.getElementById('btnGuardar');
+            if (btn.disabled || btnGuardar.disabled) return;
+            const habilitarBotones = () => {
+                btn.disabled = false;
+                btnGuardar.disabled = false;
+            };
 
             if (!claveInput.value.trim()) {
                 statusMsg.style.color = "red";
@@ -374,6 +385,7 @@
             }
 
             btn.disabled          = true;
+            btnGuardar.disabled   = true;
             statusMsg.style.color = "blue";
             statusMsg.innerText   = "📤 Enviando datos a Google Sheets...";
 
@@ -405,22 +417,30 @@
                 method: "POST",
                 body: JSON.stringify(payload)
             })
-            .then(r => r.text())
+            .then(r => {
+                if (!r.ok) throw new Error('Error HTTP ' + r.status);
+                return r.text();
+            })
             .then(() => {
                 statusMsg.style.color = "green";
-                statusMsg.innerText   = "✅ Datos enviados correctamente. Abriendo impresión...";
+                if (!imprimir) {
+                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets.";
+                    habilitarBotones();
+                    return;
+                }
+                statusMsg.innerText   = "✅ Datos guardados correctamente. Abriendo impresión...";
                 setTimeout(() => {
                     window.print();
                     statusMsg.innerText = "";
-                    btn.disabled = false;
+                    habilitarBotones();
                 }, 1500);
             })
             .catch(error => {
                 console.error("Error:", error);
                 statusMsg.style.color = "red";
                 statusMsg.innerText   = "❌ Error al enviar los datos. Revisa tu conexión.";
-                btn.disabled = false;
-                if (confirm("No se pudieron enviar los datos a Sheets.\n¿Deseas imprimir de todas formas?")) {
+                habilitarBotones();
+                if (imprimir && confirm("No se pudieron enviar los datos a Sheets.\n¿Deseas imprimir de todas formas?")) {
                     window.print();
                 }
             });
@@ -470,7 +490,50 @@
     }
     document.addEventListener('keydown', alPresionarTecla);
     marco.addEventListener('load', () => {
-        try { marco.contentDocument.addEventListener('keydown', alPresionarTecla); } catch (_) {}
+        try {
+            const documento = marco.contentDocument;
+            documento.addEventListener('keydown', alPresionarTecla);
+            const resultados = documento.getElementById('resultsContainer');
+            if (!resultados) return;
+            const estilo = documento.createElement('style');
+            estilo.textContent = '.school-card{cursor:pointer}.school-card:focus-visible{outline:3px solid #667eea;outline-offset:-3px}';
+            documento.head.appendChild(estilo);
+            function prepararTarjetas() {
+                resultados.querySelectorAll('.school-card').forEach(tarjeta => {
+                    tarjeta.setAttribute('role', 'button');
+                    tarjeta.setAttribute('tabindex', '0');
+                    tarjeta.setAttribute('aria-label', 'Usar en el formulario: ' + tarjeta.querySelector('.school-name').textContent.trim());
+                });
+            }
+            new MutationObserver(prepararTarjetas).observe(resultados, { childList: true });
+            prepararTarjetas();
+            function seleccionarEscuela(evento) {
+                const tarjeta = evento.target.closest('.school-card');
+                if (!tarjeta || !resultados.contains(tarjeta)) return;
+                if (evento.type === 'keydown') {
+                    if (evento.key !== 'Enter' && evento.key !== ' ') return;
+                    evento.preventDefault();
+                }
+                const indice = Array.from(resultados.querySelectorAll('.school-card')).indexOf(tarjeta);
+                const escuelas = marco.contentWindow.filterSchools();
+                const escuela = escuelas && escuelas[indice];
+                if (!escuela) return;
+                document.getElementById('toggleForaneo').checked = false;
+                activarForaneo(false);
+                claveInput.value = escuela.clave || '';
+                nombreInput.value = escuela.centro || '';
+                turnoInput.value = escuela.turno || '';
+                entidadInput.value = escuela.entidad || 'SINALOA';
+                localidadInput.value = escuela.localidad || '';
+                aplicarNivel(claveInput.value);
+                verificarNivelManual();
+                mostrar(false, true);
+            }
+            resultados.addEventListener('click', seleccionarEscuela);
+            resultados.addEventListener('keydown', seleccionarEscuela);
+        } catch (error) {
+            console.error('No se pudo conectar el buscador con el formulario:', error);
+        }
     });
 })();
 </script>
