@@ -358,6 +358,52 @@
             return guardarSolicitud(true);
         }
 
+
+        // Una fila de 20 columnas para pegar en B:U de MAZATLAN.
+        function prepararFilaExcel(data) {
+            const campos = ['fecha', 'atiende', 'tramite', 'nivel', 'apellidoPat',
+                'apellidoMat', 'nombre', 'curp', 'telefono', 'email', 'ciclo',
+                'nombreEscuela', 'clave', 'turno', 'entidad', 'localidad',
+                'blank1', 'blank2', 'blank3', 'observaciones'];
+            return campos.map(campo => {
+                let valor = String(data[campo] ?? '').replace(/[\t\r\n]+/g, ' ');
+                // Evitar que Excel interprete texto capturado como una formula.
+                if (/^\s*[=+@-]/.test(valor)) valor = "'" + valor;
+                return valor;
+            }).join('\t');
+        }
+
+        async function copiarFilaExcel(texto) {
+            const anterior = document.getElementById('copiaExcelManual');
+            if (anterior) anterior.remove();
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(texto);
+                    return true;
+                }
+            } catch (error) {
+                console.warn('El navegador no permitio la copia directa:', error);
+            }
+            const campo = document.createElement('textarea');
+            campo.value = texto;
+            campo.readOnly = true;
+            campo.setAttribute('aria-label', 'Datos para Excel. Copia con Ctrl+C y pega en la columna B.');
+            campo.style.cssText = 'width:100%;box-sizing:border-box;margin-top:10px;height:65px;';
+            document.querySelector('.controls').appendChild(campo);
+            const focoAnterior = document.activeElement;
+            campo.focus();
+            campo.select();
+            let copiado = false;
+            try { copiado = document.execCommand('copy'); } catch (_) {}
+            if (copiado) {
+                campo.remove();
+                if (focoAnterior) focoAnterior.focus();
+            } else {
+                campo.id = 'copiaExcelManual';
+            }
+            return copiado;
+        }
+
         function guardarSolicitud(imprimir = false) {
             const statusMsg = document.getElementById('statusMsg');
             const btn       = document.getElementById('btnEnviarImprimir');
@@ -413,6 +459,12 @@
                 foraneo:       modoForaneo ? "SÍ" : "NO"
             };
 
+            // Iniciar la copia durante el clic, antes de esperar la respuesta de Sheets.
+            const copiaExcel = copiarFilaExcel(prepararFilaExcel(payload));
+            const mensajeCopia = copiado => copiado
+                ? ' 📋 Datos copiados para Excel: pega en la columna B de MAZATLAN (B:U).'
+                : ' ⚠️ No se pudo copiar automáticamente. Selecciona el texto de abajo y copia con Ctrl+C para Excel.';
+
             fetch(GOOGLE_WEB_APP_URL, {
                 method: "POST",
                 body: JSON.stringify(payload)
@@ -421,24 +473,26 @@
                 if (!r.ok) throw new Error('Error HTTP ' + r.status);
                 return r.text();
             })
-            .then(() => {
-                statusMsg.style.color = "green";
+            .then(async () => {
+                const copiado = await copiaExcel;
+                statusMsg.style.color = copiado ? "green" : "#9a6700";
                 if (!imprimir) {
-                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets.";
+                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets." + mensajeCopia(copiado);
                     habilitarBotones();
                     return;
                 }
-                statusMsg.innerText   = "✅ Datos guardados correctamente. Abriendo impresión...";
+                statusMsg.innerText   = "✅ Datos guardados correctamente. Abriendo impresión..." + mensajeCopia(copiado);
                 setTimeout(() => {
                     window.print();
-                    statusMsg.innerText = "";
+                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets." + mensajeCopia(copiado);
                     habilitarBotones();
                 }, 1500);
             })
-            .catch(error => {
+            .catch(async error => {
+                const copiado = await copiaExcel;
                 console.error("Error:", error);
                 statusMsg.style.color = "red";
-                statusMsg.innerText   = "❌ Error al enviar los datos. Revisa tu conexión.";
+                statusMsg.innerText   = "❌ Error al enviar los datos a Google Sheets. Revisa tu conexión." + mensajeCopia(copiado);
                 habilitarBotones();
                 if (imprimir && confirm("No se pudieron enviar los datos a Sheets.\n¿Deseas imprimir de todas formas?")) {
                     window.print();
