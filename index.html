@@ -373,35 +373,55 @@
             }).join('\t');
         }
 
-        async function copiarFilaExcel(texto) {
+        function copiarFilaExcel(texto) {
             const anterior = document.getElementById('copiaExcelManual');
             if (anterior) anterior.remove();
-            try {
-                if (navigator.clipboard && window.isSecureContext) {
-                    await navigator.clipboard.writeText(texto);
-                    return true;
-                }
-            } catch (error) {
-                console.warn('El navegador no permitio la copia directa:', error);
-            }
+            const focoAnterior = document.activeElement;
             const campo = document.createElement('textarea');
             campo.value = texto;
             campo.readOnly = true;
             campo.setAttribute('aria-label', 'Datos para Excel. Copia con Ctrl+C y pega en la columna B.');
-            campo.style.cssText = 'width:100%;box-sizing:border-box;margin-top:10px;height:65px;';
-            document.querySelector('.controls').appendChild(campo);
-            const focoAnterior = document.activeElement;
-            campo.focus();
+            campo.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px;';
+            document.body.appendChild(campo);
+            campo.focus({ preventScroll: true });
             campo.select();
+            campo.setSelectionRange(0, texto.length);
+            const escapar = valor => valor.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const tabla = '<table><tbody><tr>' + texto.split('\t')
+                .map(valor => '<td style="mso-number-format:\\@">' + escapar(valor) + '</td>').join('') + '</tr></tbody></table>';
+            const alCopiar = evento => {
+                if (!evento.clipboardData) return;
+                evento.clipboardData.setData('text/plain', texto);
+                evento.clipboardData.setData('text/html', tabla);
+                evento.preventDefault();
+            };
+            // Probar dentro del mismo clic, sin esperar permisos ni respuestas de red.
+            document.addEventListener('copy', alCopiar);
             let copiado = false;
             try { copiado = document.execCommand('copy'); } catch (_) {}
-            if (copiado) {
-                campo.remove();
-                if (focoAnterior) focoAnterior.focus();
-            } else {
-                campo.id = 'copiaExcelManual';
+            document.removeEventListener('copy', alCopiar);
+            function terminar(exito) {
+                if (exito) {
+                    campo.remove();
+                    if (focoAnterior && !focoAnterior.disabled) focoAnterior.focus({ preventScroll: true });
+                } else {
+                    campo.id = 'copiaExcelManual';
+                    campo.style.cssText = 'width:100%;box-sizing:border-box;margin-top:10px;height:65px;font-size:14px;';
+                    document.querySelector('.controls').appendChild(campo);
+                    campo.focus({ preventScroll: true });
+                    campo.select();
+                }
+                return exito;
             }
-            return copiado;
+            if (copiado) return Promise.resolve(terminar(true));
+            // Alternativa moderna, iniciada tambien dentro del clic original.
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    return navigator.clipboard.writeText(texto)
+                        .then(() => terminar(true), () => terminar(false));
+                } catch (_) {}
+            }
+            return Promise.resolve(terminar(false));
         }
 
         function guardarSolicitud(imprimir = false) {
@@ -430,8 +450,6 @@
                 if (!continuar) return;
             }
 
-            btn.disabled          = true;
-            btnGuardar.disabled   = true;
             statusMsg.style.color = "blue";
             statusMsg.innerText   = "📤 Enviando datos a Google Sheets...";
 
@@ -461,6 +479,8 @@
 
             // Iniciar la copia durante el clic, antes de esperar la respuesta de Sheets.
             const copiaExcel = copiarFilaExcel(prepararFilaExcel(payload));
+            btn.disabled = true;
+            btnGuardar.disabled = true;
             const mensajeCopia = copiado => copiado
                 ? ' 📋 Datos copiados para Excel: pega en la columna B de MAZATLAN (B:U).'
                 : ' ⚠️ No se pudo copiar automáticamente. Selecciona el texto de abajo y copia con Ctrl+C para Excel.';
