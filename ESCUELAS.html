@@ -5,278 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador de Centros de Trabajo - Sinaloa</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.95;
-        }
-
-        .search-container {
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .search-box {
-            position: relative;
-            max-width: 800px;
-            margin: 0 auto 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 18px 50px 18px 20px;
-            font-size: 1.1em;
-            border: 2px solid #ddd;
-            border-radius: 50px;
-            outline: none;
-            transition: all 0.3s;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #667eea;
-            font-size: 1.3em;
-        }
-
-        .filters-container {
-            max-width: 800px;
-            margin: 0 auto;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .filter-label {
-            display: block;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-        }
-
-        .filter-select {
-            width: 100%;
-            padding: 12px 15px;
-            font-size: 1em;
-            border: 2px solid #ddd;
-            border-radius: 25px;
-            outline: none;
-            transition: all 0.3s;
-            background: white;
-            cursor: pointer;
-        }
-
-        .filter-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
-        }
-
-        .clear-filters {
-            padding: 12px 24px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-top: 24px;
-        }
-
-        .clear-filters:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        .results-info {
-            padding: 20px 30px;
-            background: #e9ecef;
-            color: #495057;
-            font-weight: 600;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .results-container {
-            padding: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .school-card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .school-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-
-        .school-name {
-            font-size: 1.3em;
-            color: #667eea;
-            font-weight: bold;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .school-name::before {
-            content: "🏫";
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-
-        .school-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 12px;
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-            min-width: 120px;
-            display: inline-block;
-        }
-
-        .detail-value {
-            color: #6c757d;
-            flex: 1;
-        }
-
-        .highlight {
-            background-color: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: 600;
-        }
-
-        .no-results, .welcome-message {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-
-        .no-results-icon, .welcome-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-
-        .no-results-text, .welcome-text {
-            font-size: 1.3em;
-            margin-bottom: 10px;
-        }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #764ba2;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .school-details {
-                grid-template-columns: 1fr;
-            }
-
-            .detail-label {
-                min-width: 100px;
-            }
-
-            .filters-container {
-                flex-direction: column;
-            }
-
-            .clear-filters {
-                width: 100%;
-                margin-top: 10px;
-            }
-        }
-    </style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:14px Arial,sans-serif;color:#202124;background:#fff}
+.container{max-width:1200px;margin:0 auto;background:#fff}
+.header{padding:18px 20px 12px}
+.header h1{font-size:18px;font-weight:600;margin-bottom:4px}
+.header p{font-size:12px;color:#667085}
+.search-container{padding:0 20px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.search-box{flex:1 1 300px}
+.search-input,.filter-select{font:14px Arial,sans-serif;width:100%;height:40px;padding:9px 11px;border:1px solid #ccd0d5;border-radius:5px;background:#fff;color:#202124}
+.search-input:focus,.filter-select:focus{outline:2px solid #72777e;outline-offset:1px}
+.filters-container{display:flex;align-items:end;gap:10px;flex:0 1 280px}
+.filter-group{flex:1;min-width:150px}
+.filter-label{display:block;font-size:12px;color:#59616c;margin-bottom:6px}
+.clear-filters,.more-results{font:13px Arial,sans-serif;padding:10px 12px;background:#fff;color:#343a40;border:1px solid #ccd0d5;border-radius:5px;cursor:pointer}
+.clear-filters:hover,.more-results:hover{background:#f5f6f7}
+.results-info{padding:10px 20px;font-size:12px;color:#59616c;background:#fafafa;border-bottom:1px solid #e5e7eb}
+.results-container{padding:0 20px}
+.school-card{padding:12px 8px;border-bottom:1px solid #e5e7eb;cursor:pointer}
+.school-card:hover{background:#f5f6f7}
+.school-card:focus-visible{outline:2px solid #72777e;outline-offset:-2px}
+.school-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.school-name{font-size:14px;font-weight:600;color:#202124;line-height:1.4}
+.school-key{font-size:12px;white-space:nowrap;font-family:Consolas,monospace;color:#40464f}
+.school-details{display:flex;gap:6px 16px;flex-wrap:wrap;margin-top:5px;font-size:12px;color:#667085;line-height:1.5}
+.school-location{margin-top:3px;font-size:12px;color:#667085;line-height:1.5;overflow-wrap:anywhere}
+.welcome-message,.no-results{padding:36px 12px;text-align:center;color:#667085;font-size:13px;line-height:1.7}
+.more-results{display:block;margin:16px auto}
+.more-results[hidden]{display:none}
+@media(max-width:520px){.header{padding:14px 14px 10px}.search-container{padding:0 14px 12px}.search-box,.filters-container{flex-basis:100%}.results-container{padding:0 10px}.results-info{padding:10px 14px}.search-input,.filter-select{font-size:16px}}
+</style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 Buscador de Centros de Trabajo</h1>
-            <p>Sistema Educativo de Sinaloa</p>
+            <h1>Buscar escuela</h1>
+            <p>Sinaloa · Selecciona una escuela para completar la solicitud</p>
         </div>
 
         <div class="search-container">
@@ -285,20 +49,20 @@
                     type="text" 
                     id="searchInput" 
                     class="search-input" 
-                    placeholder="Buscar por clave, nombre, localidad, colonia..."
+                    aria-label="Buscar por clave, nombre, localidad o colonia" placeholder="Clave, nombre, localidad o colonia…"
                     autocomplete="off"
                 >
-                <span class="search-icon">🔍</span>
+                
             </div>
             
             <div class="filters-container">
                 <div class="filter-group">
-                    <label class="filter-label" for="municipioFilter">Filtrar por Municipio:</label>
+                    <label class="filter-label" for="municipioFilter">Municipio</label>
                     <select id="municipioFilter" class="filter-select">
                         <option value="">Todos los municipios</option>
                     </select>
                 </div>
-                <button id="clearFilters" class="clear-filters" style="display: none;">Limpiar Filtros</button>
+                <button id="clearFilters" class="clear-filters" style="display: none;">Limpiar</button>
             </div>
         </div>
 
@@ -307,14 +71,10 @@
         </div>
 
         <div class="results-container" id="resultsContainer">
-            <div class="welcome-message">
-                <div class="welcome-icon">🔍</div>
-                <div class="welcome-text">Comienza a buscar</div>
-                <div>Escribe en el campo de búsqueda o selecciona un municipio para ver resultados</div>
-            </div>
+            <div class="welcome-message">Escribe una clave o nombre, o elige un municipio.</div>
         </div>
+        <button type="button" id="showMore" class="more-results" hidden>Mostrar más</button>
     </div>
-
     <script>
         // DATOS INCRUSTADOS - Reemplaza este array con tus datos completos
         const CENTROS_DATA = [
@@ -28880,172 +28640,133 @@
             // Agrega aquí todos tus centros de trabajo
         ];
 
+
         let allSchools = [];
-        let municipios = new Set();
-
-        // Cargar datos desde el array incrustado
+        const municipios = new Set();
+        const indiceBusqueda = new WeakMap();
+        const searchInput = document.getElementById('searchInput');
+        const municipioFilter = document.getElementById('municipioFilter');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const clearFilters = document.getElementById('clearFilters');
+        const showMore = document.getElementById('showMore');
+        const TAMANO_PAGINA = 60;
+        let limiteVisible = TAMANO_PAGINA;
+        let cacheConsulta = null;
+        let cacheResultados = null;
+        let busquedaPendiente = null;
+        function normalizar(valor) {
+            return String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
         function loadSchoolsData() {
-            try {
-                // Usar los datos incrustados
-                allSchools = CENTROS_DATA;
-                
-                // Extraer municipios únicos
-                allSchools.forEach(school => {
-                    if (school.municipio) {
-                        municipios.add(school.municipio);
-                    }
-                });
-                
-                // Poblar el selector de municipios
-                const municipioSelect = document.getElementById('municipioFilter');
-                Array.from(municipios).sort().forEach(muni => {
-                    const option = document.createElement('option');
-                    option.value = muni;
-                    option.textContent = muni;
-                    municipioSelect.appendChild(option);
-                });
-                
-            } catch (error) {
-                console.error('Error al cargar los datos:', error);
-                const container = document.getElementById('resultsContainer');
-                container.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">⚠️</div>
-                        <div class="no-results-text">Error al cargar los datos</div>
-                        <div>Hubo un problema al inicializar los datos.<br>
-                        Error: ${error.message}</div>
-                    </div>
-                `;
-            }
+            allSchools = CENTROS_DATA;
+            allSchools.forEach(school => {
+                if (school.municipio) municipios.add(school.municipio);
+                indiceBusqueda.set(school, normalizar([school.clave, school.centro,
+                    school.turno, school.sostenimiento, school.municipio,
+                    school.localidad, school.colonia].join(' ')));
+            });
+            Array.from(municipios).sort().forEach(municipio => {
+                const option = document.createElement('option');
+                option.value = municipio;
+                option.textContent = municipio;
+                municipioFilter.appendChild(option);
+            });
         }
-
-        function highlightText(text, searchTerm) {
-            if (!searchTerm) return text;
-            const regex = new RegExp(`(${searchTerm})`, 'gi');
-            return text.replace(regex, '<span class="highlight">$1</span>');
-        }
-
+        // Conserva el orden exacto para la selección desde el formulario padre.
         function filterSchools() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            const selectedMunicipio = document.getElementById('municipioFilter').value;
-            
-            // Si no hay búsqueda ni filtro, no mostrar resultados
-            if (!searchTerm && !selectedMunicipio) {
+            const term = normalizar(searchInput.value.trim());
+            const municipio = municipioFilter.value;
+            const consulta = JSON.stringify([term, municipio]);
+            if (consulta === cacheConsulta) return cacheResultados;
+            cacheConsulta = consulta;
+            if (!term && !municipio) {
+                cacheResultados = null;
                 return null;
             }
-            
-            let results = allSchools;
-            
-            // Filtrar por municipio si está seleccionado
-            if (selectedMunicipio) {
-                results = results.filter(school => school.municipio === selectedMunicipio);
-            }
-            
-            // Filtrar por término de búsqueda si existe
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                results = results.filter(school => {
-                    return school.clave.toLowerCase().includes(term) ||
-                           school.centro.toLowerCase().includes(term) ||
-                           school.turno.toLowerCase().includes(term) ||
-                           school.sostenimiento.toLowerCase().includes(term) ||
-                           school.municipio.toLowerCase().includes(term) ||
-                           school.localidad.toLowerCase().includes(term) ||
-                           school.colonia.toLowerCase().includes(term);
-                });
-            }
-            
-            return results;
+            const palabras = term.split(/\s+/).filter(Boolean);
+            cacheResultados = allSchools.filter(school =>
+                (!municipio || school.municipio === municipio) &&
+                palabras.every(palabra => indiceBusqueda.get(school).includes(palabra)));
+            return cacheResultados;
         }
-
-        function displayResults(schools, searchTerm) {
-            const container = document.getElementById('resultsContainer');
-            const resultsInfo = document.getElementById('resultsInfo');
-            const clearButton = document.getElementById('clearFilters');
-            const selectedMunicipio = document.getElementById('municipioFilter').value;
-            
-            // Mostrar botón de limpiar si hay filtros activos
-            clearButton.style.display = (searchTerm || selectedMunicipio) ? 'block' : 'none';
-
-            // Si no hay búsqueda activa, mostrar mensaje de bienvenida
+        function texto(tag, clase, contenido) {
+            const elemento = document.createElement(tag);
+            elemento.className = clase;
+            elemento.textContent = contenido;
+            return elemento;
+        }
+        function displayResults(schools) {
+            resultsContainer.replaceChildren();
+            clearFilters.style.display = (searchInput.value.trim() || municipioFilter.value) ? 'block' : 'none';
+            showMore.hidden = true;
+            resultsInfo.style.display = schools === null ? 'none' : 'block';
             if (schools === null) {
-                container.innerHTML = `
-                    <div class="welcome-message">
-                        <div class="welcome-icon">🔍</div>
-                        <div class="welcome-text">Comienza a buscar</div>
-                        <div>Escribe en el campo de búsqueda o selecciona un municipio para ver resultados</div>
-                    </div>
-                `;
-                resultsInfo.style.display = 'none';
+                resultsContainer.appendChild(texto('div', 'welcome-message', 'Escribe una clave o nombre, o elige un municipio.'));
                 return;
             }
-
-            resultsInfo.style.display = 'block';
-
-            if (schools.length === 0) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">📭</div>
-                        <div class="no-results-text">No se encontraron resultados</div>
-                        <div>Intenta con otros términos de búsqueda o cambia el municipio seleccionado</div>
-                    </div>
-                `;
-                resultsInfo.textContent = 'No se encontraron resultados';
+            if (!schools.length) {
+                resultsInfo.textContent = 'Sin resultados';
+                resultsContainer.appendChild(texto('div', 'no-results', 'Prueba otro nombre, clave o municipio.'));
                 return;
             }
-
-            resultsInfo.textContent = `Mostrando ${schools.length} resultado${schools.length !== 1 ? 's' : ''}`;
-
-            container.innerHTML = schools.map(school => `
-                <div class="school-card">
-                    <div class="school-name">${highlightText(school.centro, searchTerm)}</div>
-                    <div class="school-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Clave CT:</span>
-                            <span class="detail-value">${highlightText(school.clave, searchTerm)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Turno:</span>
-                            <span class="detail-value">${highlightText(school.turno, searchTerm)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Sostenimiento:</span>
-                            <span class="detail-value">${highlightText(school.sostenimiento, searchTerm)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Municipio:</span>
-                            <span class="detail-value">${highlightText(school.municipio, searchTerm)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Localidad:</span>
-                            <span class="detail-value">${highlightText(school.localidad, searchTerm)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Colonia:</span>
-                            <span class="detail-value">${highlightText(school.colonia, searchTerm)}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+            const visibles = schools.slice(0, limiteVisible);
+            resultsInfo.textContent = visibles.length + ' de ' + schools.length + ' resultados · Haz clic para seleccionar';
+            const fragment = document.createDocumentFragment();
+            visibles.forEach(school => {
+                const tarjeta = texto('div', 'school-card', '');
+                tarjeta.setAttribute('role', 'button');
+                tarjeta.tabIndex = 0;
+                tarjeta.setAttribute('aria-label', 'Seleccionar ' + school.centro + ', ' + school.clave);
+                const cabecera = texto('div', 'school-heading', '');
+                cabecera.append(texto('div', 'school-name', school.centro),
+                    texto('span', 'school-key', school.clave));
+                const detalles = texto('div', 'school-details', '');
+                [school.turno, school.sostenimiento, school.municipio].filter(Boolean)
+                    .forEach(valor => detalles.appendChild(texto('span', '', valor)));
+                const ubicacion = texto('div', 'school-location',
+                    [school.localidad, school.colonia].filter(Boolean).join(' · '));
+                tarjeta.append(cabecera, detalles, ubicacion);
+                fragment.appendChild(tarjeta);
+            });
+            resultsContainer.appendChild(fragment);
+            showMore.hidden = visibles.length >= schools.length;
         }
-
         function updateResults() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            const results = filterSchools();
-            displayResults(results, searchTerm);
+            clearTimeout(busquedaPendiente);
+            displayResults(filterSchools());
         }
-
-        // Event listeners
-        document.getElementById('searchInput').addEventListener('input', updateResults);
-        document.getElementById('municipioFilter').addEventListener('change', updateResults);
-        
-        document.getElementById('clearFilters').addEventListener('click', () => {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('municipioFilter').value = '';
+        searchInput.addEventListener('input', () => {
+            limiteVisible = TAMANO_PAGINA;
+            clearTimeout(busquedaPendiente);
+            // Evitar seleccionar resultados anteriores mientras cambia la búsqueda.
+            resultsContainer.replaceChildren();
+            showMore.hidden = true;
+            busquedaPendiente = setTimeout(updateResults, 100);
+        });
+        searchInput.addEventListener('keydown', evento => {
+            if (evento.key === 'Enter' || evento.key === 'ArrowDown') {
+                evento.preventDefault();
+                updateResults();
+                const primera = resultsContainer.querySelector('.school-card');
+                if (primera) primera.focus();
+            }
+        });
+        municipioFilter.addEventListener('change', () => {
+            limiteVisible = TAMANO_PAGINA;
             updateResults();
         });
-
-        // Inicializar - cargar datos al cargar la página
+        clearFilters.addEventListener('click', () => {
+            searchInput.value = '';
+            municipioFilter.value = '';
+            limiteVisible = TAMANO_PAGINA;
+            updateResults();
+            searchInput.focus();
+        });
+        showMore.addEventListener('click', () => {
+            limiteVisible += TAMANO_PAGINA;
+            updateResults();
+        });
         loadSchoolsData();
     </script>
 </body>
