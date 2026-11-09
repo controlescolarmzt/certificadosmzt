@@ -84,6 +84,23 @@
             .obs-container textarea { border: none !important; }
         }
     </style>
+
+<style>
+[hidden]{display:none!important}
+.btn-school{border:1px solid #ccc;background:#fff;padding:8px 12px;border-radius:5px;color:#222;cursor:pointer}
+#escuelaSecundaria{border-top:2px solid #ccc;margin-top:28px;padding-top:20px}
+#nivelWarning2{color:#b42318;font-size:12px;margin:8px 0}
+#impresionSolicitudes{display:none}
+@media print{
+.no-print{display:none!important}
+body.imprimeSolicitudes> *{display:none!important}
+body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
+.solicitud-impresa{break-after:page;page-break-after:always}
+.solicitud-impresa:last-child{break-after:auto;page-break-after:auto}
+.solicitud-impresa .foraneo-bar{display:none!important}
+.valor-impreso{display:block;padding:8px 5px;font:12px Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
+}
+</style>
 </head>
 <body>
 
@@ -113,7 +130,7 @@
         <div class="field"><label>SOLICITA</label><input type="text" id="solicita" value="MAZATLAN" readonly></div>
         <div class="field"><label>ATIENDE</label><input type="text" id="atiende" value="ARCHIVO SINALOA" readonly></div>
         <div class="field">
-            <label>TRAMITE:</label>
+            <label id="tituloTramite">TRAMITE:</label>
             <select id="tramite" class="editable">
                 <option value="CERTIF. TOTAL">CERTIF. TOTAL</option>
                 <option value="CERTIF. TOTAL CON CORRECCION">CERTIF. TOTAL CON CORRECCION</option>
@@ -122,14 +139,16 @@
         </div>
         <div class="field">
             <label>NIVEL:</label>
-            <select id="nivel" class="editable" onchange="verificarNivelManual()">
+            <select id="nivel" class="editable" onchange="cambiarModalidad()">
                 <option value="PRIMARIA">PRIMARIA</option>
                 <option value="SECUNDARIA">SECUNDARIA</option>
+                <option value="AMBOS">PRIMARIA Y SECUNDARIA</option>
             </select>
             <div id="nivelWarning">⚠️ La clave no corresponde a este nivel</div>
         </div>
     </div>
 
+    <p id="avisoDobleNivel" class="no-print" hidden style="font-size:13px;margin:10px 0 18px;">Los datos personales se comparten. Cada nivel se guarda en una fila distinta.</p>
     <!-- DATOS PERSONALES -->
     <div class="row">
         <div class="field"><label>NOMBRE(S):</label><input type="text" id="nombre" class="editable"></div>
@@ -139,6 +158,7 @@
         <div class="field"><label>TELEFONO</label><input type="text" id="telefono" class="editable"></div>
     </div>
 
+<section id="escuelaPrincipal">
     <!-- DATOS DE LA ESCUELA -->
     <div class="foraneo-bar">
         <label for="toggleForaneo">🏫 FORÁNEO:</label>
@@ -150,7 +170,7 @@
     </div>
 
     <div class="section-title">
-        <span>DATOS DE LA ESCUELA:</span>
+        <span id="tituloEscuelaPrincipal">DATOS DE LA ESCUELA:</span><button type="button" class="btn-school no-print" onclick="abrirBuscadorPara(1)">Buscar escuela</button>
         <div class="cycle-box">
             <label>CICLO:</label>
             <input type="text" id="ciclo" list="listaCiclos" placeholder="Ej. 2018-2019" class="editable">
@@ -179,6 +199,49 @@
         <textarea id="observaciones" class="editable"></textarea>
     </div>
 
+</section>
+<section id="escuelaSecundaria" hidden>
+<div class="row"><div class="field"><label>TRÁMITE SECUNDARIA:</label><select id="tramite2" class="editable"><option value="CERTIF. TOTAL">CERTIF. TOTAL</option><option value="CERTIF. TOTAL CON CORRECCION">CERTIF. TOTAL CON CORRECCION</option><option value="CERTIF. PARCIAL">CERTIF. PARCIAL</option></select></div></div>
+    <div class="foraneo-bar">
+        <label for="toggleForaneo2">🏫 FORÁNEO:</label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggleForaneo2" onchange="activarForaneoSegundo(this.checked)">
+            <span class="toggle-slider"></span>
+        </label>
+        <label for="toggleForaneo2" id="foraneoLabel2" style="color:#999; font-weight:normal;">OFF</label>
+    </div>
+
+    <div class="section-title">
+        <span>SECUNDARIA:</span><button type="button" class="btn-school no-print" onclick="abrirBuscadorPara(2)">Buscar secundaria</button>
+        <div class="cycle-box">
+            <label>CICLO:</label>
+            <input type="text" id="ciclo2" list="listaCiclos" placeholder="Ej. 2018-2019" class="editable">
+            
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="field">
+            <label>CLAVE:</label>
+            <input type="text" id="clave2" list="listaClaves" class="editable">
+            
+        </div>
+        <div class="field">
+            <label>NOMBRE:</label>
+            <input type="text" id="nombreEscuela2" list="listaNombres" class="editable">
+            
+        </div>
+        <div class="field"><label>TURNO:</label><input type="text" id="turno2" class="editable"></div>
+        <div class="field"><label>ENTIDAD:</label><input type="text" id="entidad2" readonly tabindex="-1"></div>
+        <div class="field"><label>LOCALIDAD:</label><input type="text" id="localidad2" readonly tabindex="-1"></div>
+    </div>
+
+    <div class="obs-container">
+        <label>OBSERVACIONES:</label>
+        <textarea id="observaciones2" class="editable"></textarea>
+    </div>
+
+</section>
     <div class="footer">
         <div class="signature-line"></div>
         <div class="signature-text">FIRMA DEL SOLICITANTE</div>
@@ -189,7 +252,7 @@
     <div class="controls no-print">
         <button type="button" class="btn btn-send" id="btnGuardar" onclick="guardarSolicitud(false)">💾 Guardar</button>
         <button type="button" class="btn btn-send" id="btnEnviarImprimir" onclick="enviarEImprimir()">🖨️ Guardar e imprimir</button>
-        <p id="statusMsg" style="margin-top:10px; font-weight:bold;"></p>
+        <p id="statusMsg" role="status" aria-live="polite" style="margin-top:10px; font-weight:bold;"></p>
     </div>
 
     <script>
@@ -297,7 +360,7 @@
         // 5. APLICA NIVEL AL SELECT
         function aplicarNivel(clave) {
             const nivelDetectado = detectarNivel(clave);
-            if (nivelDetectado) {
+            if (nivelDetectado && nivelSelect.value !== 'AMBOS') {
                 nivelSelect.value = nivelDetectado;
                 nivelSelect.classList.add('nivel-autodetectado');
                 setTimeout(() => nivelSelect.classList.remove('nivel-autodetectado'), 2000);
@@ -309,7 +372,7 @@
         // 6. VERIFICA NIVEL MANUAL
         function verificarNivelManual() {
             const nivelDetectado = detectarNivel(claveInput.value.trim());
-            if (nivelDetectado && nivelDetectado !== nivelSelect.value) {
+            if (nivelDetectado && nivelDetectado !== (nivelSelect.value === 'AMBOS' ? 'PRIMARIA' : nivelSelect.value)) {
                 nivelWarning.style.display = 'block';
                 nivelSelect.parentElement.classList.add('nivel-warning');
             } else {
@@ -328,13 +391,13 @@
             } else {
                 const val = nombreInput.value.trim().toUpperCase();
                 const candidatos = escuelasDB.filter(e => e.centro && e.centro.toUpperCase() === val);
-                match = candidatos.find(e => detectarNivel(e.clave) === nivelSelect.value) || candidatos[0];
+                match = candidatos.find(e => detectarNivel(e.clave) === (nivelSelect.value === 'AMBOS' ? 'PRIMARIA' : nivelSelect.value)) || candidatos[0];
             }
             if (match) {
                 claveInput.value     = match.clave;
                 nombreInput.value    = match.centro;
                 turnoInput.value     = match.turno;
-                entidadInput.value   = match.entidad || match.municipio || "SINALOA";
+                entidadInput.value   = match.entidad || "SINALOA";
                 localidadInput.value = match.localidad;
                 aplicarNivel(match.clave);
             }
@@ -387,8 +450,8 @@
             campo.select();
             campo.setSelectionRange(0, texto.length);
             const escapar = valor => valor.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            const tabla = '<table><tbody><tr>' + texto.split('\t')
-                .map(valor => '<td style="mso-number-format:\\@">' + escapar(valor) + '</td>').join('') + '</tr></tbody></table>';
+            const tabla = '<table><tbody>' + texto.split(/\r?\n/).map(fila => '<tr>' + fila.split('\t')
+                .map(valor => '<td style="mso-number-format:\\\\@">' + escapar(valor) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
             const alCopiar = evento => {
                 if (!evento.clipboardData) return;
                 evento.clipboardData.setData('text/plain', texto);
@@ -424,101 +487,185 @@
             return Promise.resolve(terminar(false));
         }
 
-        function guardarSolicitud(imprimir = false) {
-            const statusMsg = document.getElementById('statusMsg');
-            const btn       = document.getElementById('btnEnviarImprimir');
-            const btnGuardar = document.getElementById('btnGuardar');
-            if (btn.disabled || btnGuardar.disabled) return;
-            const habilitarBotones = () => {
-                btn.disabled = false;
-                btnGuardar.disabled = false;
-            };
-
-            if (!claveInput.value.trim()) {
-                statusMsg.style.color = "red";
-                statusMsg.innerText   = "⚠️ Ingresa la clave de la escuela antes de continuar.";
-                return;
-            }
-
-            const nivelDetectado = detectarNivel(claveInput.value.trim());
-            if (nivelDetectado && nivelDetectado !== nivelSelect.value) {
-                const continuar = confirm(
-                    `⚠️ La clave ingresada corresponde a ${nivelDetectado}, ` +
-                    `pero el nivel seleccionado es ${nivelSelect.value}.\n\n` +
-                    `¿Deseas continuar de todas formas?`
-                );
-                if (!continuar) return;
-            }
-
-            statusMsg.style.color = "blue";
-            statusMsg.innerText   = "📤 Enviando datos a Google Sheets...";
-
-            const payload = {
-                fecha:         document.getElementById('fecha').value,
-                atiende:       document.getElementById('atiende').value,
-                tramite:       document.getElementById('tramite').value.toUpperCase(),
-                nivel:         nivelSelect.value.toUpperCase(),
-                apellidoPat:   document.getElementById('apellidoPat').value.toUpperCase(),
-                apellidoMat:   document.getElementById('apellidoMat').value.toUpperCase(),
-                nombre:        document.getElementById('nombre').value.toUpperCase(),
-                curp:          document.getElementById('curp').value.toUpperCase(),
-                telefono:      document.getElementById('telefono').value,
-                email:         "",
-                ciclo:         document.getElementById('ciclo').value,
-                nombreEscuela: nombreInput.value.toUpperCase(),
-                clave:         claveInput.value.toUpperCase(),
-                turno:         turnoInput.value.toUpperCase(),
-                entidad:       entidadInput.value.toUpperCase(),
-                localidad:     localidadInput.value.toUpperCase(),
-                blank1:        "",
-                blank2:        "",
-                blank3:        "",
-                observaciones: document.getElementById('observaciones').value.toUpperCase(),
-                foraneo:       modoForaneo ? "SÍ" : "NO"
-            };
-
-            // Iniciar la copia durante el clic, antes de esperar la respuesta de Sheets.
-            const copiaExcel = copiarFilaExcel(prepararFilaExcel(payload));
-            btn.disabled = true;
-            btnGuardar.disabled = true;
-            const mensajeCopia = copiado => copiado
-                ? ' 📋 Datos copiados para Excel: pega en la columna B de MAZATLAN (B:U).'
-                : ' ⚠️ No se pudo copiar automáticamente. Selecciona el texto de abajo y copia con Ctrl+C para Excel.';
-
-            fetch(GOOGLE_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            })
-            .then(r => {
-                if (!r.ok) throw new Error('Error HTTP ' + r.status);
-                return r.text();
-            })
-            .then(async () => {
-                const copiado = await copiaExcel;
-                statusMsg.style.color = copiado ? "green" : "#9a6700";
-                if (!imprimir) {
-                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets." + mensajeCopia(copiado);
-                    habilitarBotones();
-                    return;
+        let destinoEscuela = 1;
+        const guardadosParciales = new Set();
+        const campo = id => document.getElementById(id);
+        const valor = id => campo(id).value.trim();
+        function cambiarModalidad() {
+            const doble = nivelSelect.value === 'AMBOS';
+            campo('escuelaSecundaria').hidden = !doble;
+            campo('avisoDobleNivel').hidden = !doble;
+            campo('tituloTramite').textContent = doble ? 'TRÁMITE PRIMARIA:' : 'TRAMITE:';
+            campo('tituloEscuelaPrincipal').textContent = doble ? 'PRIMARIA:' : 'DATOS DE LA ESCUELA:';
+            verificarNivelManual();
+        }
+        function activarForaneoSegundo(activo) {
+            campo('foraneoLabel2').textContent = activo ? 'ON' : 'OFF';
+            for (const id of ['clave','nombreEscuela','turno','entidad','localidad']) {
+                const input = campo(id + '2');
+                input.classList.toggle('foraneo-active', activo);
+                if (id === 'entidad' || id === 'localidad') {
+                    input.readOnly = !activo;
+                    input.setAttribute('tabindex', activo ? '0' : '-1');
                 }
-                statusMsg.innerText   = "✅ Datos guardados correctamente. Abriendo impresión..." + mensajeCopia(copiado);
-                setTimeout(() => {
-                    window.print();
-                    statusMsg.innerText = "✅ Datos guardados correctamente en Google Sheets." + mensajeCopia(copiado);
-                    habilitarBotones();
-                }, 1500);
-            })
-            .catch(async error => {
-                const copiado = await copiaExcel;
-                console.error("Error:", error);
-                statusMsg.style.color = "red";
-                statusMsg.innerText   = "❌ Error al enviar los datos a Google Sheets. Revisa tu conexión." + mensajeCopia(copiado);
-                habilitarBotones();
-                if (imprimir && confirm("No se pudieron enviar los datos a Sheets.\n¿Deseas imprimir de todas formas?")) {
-                    window.print();
-                }
+            }
+            for (const [id, lista] of [['clave2','listaClaves'], ['nombreEscuela2','listaNombres']]) {
+                if (activo) campo(id).removeAttribute('list');
+                else campo(id).setAttribute('list', lista);
+            }
+        }
+        function completarSegundo(porClave) {
+            if (campo('toggleForaneo2').checked) return;
+            const candidatos = escuelasDB.filter(e => porClave
+                ? e.clave && e.clave.toUpperCase() === valor('clave2').toUpperCase()
+                : e.centro && e.centro.toUpperCase() === valor('nombreEscuela2').toUpperCase());
+            const escuela = candidatos.find(e => detectarNivel(e.clave) === 'SECUNDARIA') || candidatos[0];
+            if (escuela) colocarEscuela(escuela, 2);
+        }
+        function colocarEscuela(escuela, destino) {
+            const sufijo = destino === 2 ? '2' : '';
+            for (const [id, dato] of [['clave',escuela.clave],['nombreEscuela',escuela.centro],
+                ['turno',escuela.turno],['entidad',escuela.entidad || 'SINALOA'],['localidad',escuela.localidad]]) {
+                campo(id + sufijo).value = dato || '';
+            }
+            if (destino === 1) {
+                aplicarNivel(escuela.clave);
+                verificarNivelManual();
+            }
+        }
+        function recibirEscuelaSeleccionada(escuela) {
+            const detectado = detectarNivel(escuela.clave);
+            const destino = nivelSelect.value === 'AMBOS' && detectado
+                ? (detectado === 'SECUNDARIA' ? 2 : 1) : destinoEscuela;
+            if (destino === 2 && nivelSelect.value !== 'AMBOS') destinoEscuela = 1;
+            const real = nivelSelect.value === 'AMBOS' ? destino : 1;
+            campo(real === 2 ? 'toggleForaneo2' : 'toggleForaneo').checked = false;
+            if (real === 2) activarForaneoSegundo(false);
+            else activarForaneo(false);
+            colocarEscuela(escuela, real);
+        }
+        campo('clave2').addEventListener('input', () => completarSegundo(true));
+        campo('nombreEscuela2').addEventListener('input', () => completarSegundo(false));
+
+        function construirSolicitudes() {
+            const doble = nivelSelect.value === 'AMBOS';
+            const comun = {
+                fecha: valor('fecha'), apellidoPat: valor('apellidoPat').toUpperCase(),
+                apellidoMat: valor('apellidoMat').toUpperCase(), nombre: valor('nombre').toUpperCase(),
+                curp: valor('curp').toUpperCase(), telefono: valor('telefono'), email: '',
+                blank1: '', blank2: '', blank3: ''
+            };
+            return (doble ? [1,2] : [1]).map(destino => {
+                const s = destino === 2 ? '2' : '';
+                const foraneo = campo('toggleForaneo' + s).checked;
+                return { ...comun, atiende: foraneo ? 'ARCHIVO OTROS ESTADOS' : 'ARCHIVO SINALOA',
+                    tramite: valor('tramite' + s).toUpperCase(),
+                    nivel: doble ? (destino === 1 ? 'PRIMARIA' : 'SECUNDARIA') : nivelSelect.value,
+                    ciclo: valor('ciclo' + s), nombreEscuela: valor('nombreEscuela' + s).toUpperCase(),
+                    clave: valor('clave' + s).toUpperCase(), turno: valor('turno' + s).toUpperCase(),
+                    entidad: valor('entidad' + s).toUpperCase(), localidad: valor('localidad' + s).toUpperCase(),
+                    observaciones: valor('observaciones' + s).toUpperCase(), foraneo: foraneo ? 'SÍ' : 'NO'
+                };
             });
         }
+        function prepararImpresion(solicitudes) {
+            campo('impresionSolicitudes')?.remove();
+            const contenedor = document.createElement('div');
+            contenedor.id = 'impresionSolicitudes';
+            const header = document.querySelector('.header');
+            const solicitud = campo('nivel').closest('.row');
+            const persona = campo('nombre').closest('.row');
+            const escuela = campo('escuelaPrincipal');
+            const footer = document.querySelector('.footer');
+            for (const data of solicitudes) {
+                const pagina = document.createElement('div');
+                pagina.className = 'solicitud-impresa';
+                for (const original of [header, solicitud, persona, escuela, footer]) pagina.appendChild(original.cloneNode(true));
+                pagina.querySelector('#tituloTramite').textContent = 'TRAMITE:';
+                pagina.querySelector('#tituloEscuelaPrincipal').textContent = 'DATOS DE LA ESCUELA: ' + data.nivel;
+                pagina.querySelectorAll('input,select,textarea').forEach(input => {
+                    if (input.type === 'checkbox') { input.remove(); return; }
+                    const texto = document.createElement('span');
+                    texto.className = 'valor-impreso';
+                    texto.textContent = data[input.id] ?? input.value;
+                    input.replaceWith(texto);
+                });
+                pagina.querySelectorAll('.no-print,datalist,script,.foraneo-bar,#nivelWarning').forEach(n => n.remove());
+                pagina.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+                contenedor.appendChild(pagina);
+            }
+            document.body.appendChild(contenedor);
+            document.body.classList.add('imprimeSolicitudes');
+        }
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('imprimeSolicitudes');
+            campo('impresionSolicitudes')?.remove();
+        });
+        function imprimirSolicitudes(solicitudes) {
+            prepararImpresion(solicitudes);
+            window.print();
+        }
+        async function guardarSolicitud(imprimir = false) {
+            const status = campo('statusMsg');
+            const botones = [campo('btnGuardar'), campo('btnEnviarImprimir')];
+            if (botones.some(b => b.disabled)) return;
+            const solicitudes = construirSolicitudes();
+            for (const data of solicitudes) {
+                if (!data.clave) {
+                    status.style.color = 'red';
+                    status.innerText = 'Ingresa la clave de la escuela de ' + data.nivel + ' antes de guardar.';
+                    return;
+                }
+                const detectado = detectarNivel(data.clave);
+                if (detectado && detectado !== data.nivel) {
+                    status.style.color = 'red';
+                    status.innerText = 'La clave de ' + data.nivel + ' corresponde a ' + detectado + '. Revisa la escuela.';
+                    return;
+                }
+            }
+            // Copia inmediata durante el clic; un registro por línea, sin Foráneo.
+            const copia = copiarFilaExcel(solicitudes.map(prepararFilaExcel).join('\r\n'));
+            botones.forEach(b => b.disabled = true);
+            const mensajeCopia = ok => ok
+                ? ' 📋 Copiada' + (solicitudes.length === 2 ? 's 2 filas' : ' 1 fila') + ' para Excel. Pega en B de MAZATLAN; cada fila termina en U.'
+                : ' ⚠️ Copia el texto de abajo con Ctrl+C para pegarlo en Excel.';
+            let confirmados = 0;
+            let intentoActual = null;
+            try {
+                for (const data of solicitudes) {
+                    const firma = JSON.stringify(data);
+                    if (guardadosParciales.has(firma)) { confirmados++; continue; }
+                    intentoActual = data;
+                    status.style.color = 'blue';
+                    status.innerText = 'Guardando ' + data.nivel + ' en Google Sheets (' + (confirmados + 1) + '/' + solicitudes.length + ')…';
+                    const respuesta = await fetch(GOOGLE_WEB_APP_URL, { method: 'POST', body: firma });
+                    if (!respuesta.ok) throw new Error('Error HTTP ' + respuesta.status);
+                    const cuerpo = await respuesta.text();
+                    let resultado;
+                    try { resultado = JSON.parse(cuerpo); } catch (_) {}
+                    if (resultado && (resultado.success === false || resultado.status === 'error' || resultado.error)) {
+                        throw new Error('El servidor no confirmó el guardado');
+                    }
+                    guardadosParciales.add(firma);
+                    confirmados++;
+                    intentoActual = null;
+                }
+                const copiado = await copia;
+                status.style.color = copiado ? 'green' : '#9a6700';
+                status.innerText = '✅ Guardado' + (solicitudes.length === 2 ? 's 2 registros' : ' 1 registro') + ' en Google Sheets.' + mensajeCopia(copiado);
+                guardadosParciales.clear();
+                if (imprimir) imprimirSolicitudes(solicitudes);
+            } catch (error) {
+                console.error('No se completó el guardado:', error);
+                const copiado = await copia;
+                status.style.color = 'red';
+                status.innerText = '⚠️ ' + confirmados + ' de ' + solicitudes.length + ' registros confirmados. No se pudo confirmar ' + (intentoActual?.nivel || 'la operación') + '. Revisa Google Sheets antes de volver a guardar: el envío pudo haberse recibido. Los registros ya confirmados se omitirán al reintentar sin recargar la página.' + mensajeCopia(copiado);
+            } finally {
+                botones.forEach(b => b.disabled = false);
+            }
+        }
+
+
     </script>
 
 <!-- INICIO: buscador flotante; el formulario original no se modifica -->
@@ -557,7 +704,11 @@
         }
         else if (devolverFoco) abrir.focus();
     }
-    abrir.addEventListener('click', () => mostrar(ventana.hidden));
+    window.abrirBuscadorPara = destino => {
+        destinoEscuela = destino;
+        mostrar(true);
+    };
+    abrir.addEventListener('click', () => { destinoEscuela = 1; mostrar(ventana.hidden); });
     minimizar.addEventListener('click', () => mostrar(false, true));
     document.addEventListener('pointerdown', evento => {
         if (!ventana.hidden && !ventana.contains(evento.target) && !abrir.contains(evento.target)) mostrar(false);
@@ -599,15 +750,7 @@
                 const escuelas = marco.contentWindow.filterSchools();
                 const escuela = escuelas && escuelas[indice];
                 if (!escuela) return;
-                document.getElementById('toggleForaneo').checked = false;
-                activarForaneo(false);
-                claveInput.value = escuela.clave || '';
-                nombreInput.value = escuela.centro || '';
-                turnoInput.value = escuela.turno || '';
-                entidadInput.value = escuela.entidad || 'SINALOA';
-                localidadInput.value = escuela.localidad || '';
-                aplicarNivel(claveInput.value);
-                verificarNivelManual();
+                recibirEscuelaSeleccionada(escuela);
                 mostrar(false, true);
             }
             resultados.addEventListener('click', seleccionarEscuela);
