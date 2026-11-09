@@ -523,11 +523,11 @@
 
 <!-- INICIO: buscador flotante; el formulario original no se modifica -->
 <style>
-#abrirBuscadorEscuelas{position:fixed;right:20px;bottom:20px;z-index:10000;padding:12px 18px;border:0;border-radius:8px;background:#667eea;color:#fff;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 4px 18px #0003}
+#abrirBuscadorEscuelas{position:fixed;right:20px;bottom:20px;z-index:10000;padding:12px 18px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#202124;font:600 14px Arial,sans-serif;cursor:pointer;box-shadow:0 4px 18px #0003}
 #ventanaBuscadorEscuelas{position:fixed;right:20px;bottom:78px;width:min(960px,calc(100vw - 40px));height:min(720px,calc(100dvh - 110px));z-index:10001;background:#fff;border:1px solid #ddd;border-radius:12px;overflow:hidden;box-shadow:0 12px 45px #0004;display:flex;flex-direction:column}
 #ventanaBuscadorEscuelas[hidden]{display:none!important}
-#barraBuscadorEscuelas{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#667eea;color:white;font:600 14px Arial,sans-serif}
-#minimizarBuscadorEscuelas{padding:7px 10px;background:#fff;color:#4454b6;border:0;border-radius:5px;cursor:pointer;font:14px Arial,sans-serif}
+#barraBuscadorEscuelas{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#fff;color:#202124;border-bottom:1px solid #e5e7eb;font:600 14px Arial,sans-serif}
+#minimizarBuscadorEscuelas{padding:7px 10px;background:#fff;color:#343a40;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;font:14px Arial,sans-serif}
 #marcoBuscadorEscuelas{display:block;flex:1;width:100%;min-height:0;border:0;background:white}
 @media(max-width:600px){#ventanaBuscadorEscuelas{right:10px;bottom:72px;width:calc(100vw - 20px);height:calc(100dvh - 92px)}#abrirBuscadorEscuelas{right:10px;bottom:14px}}
 @media print{#abrirBuscadorEscuelas,#ventanaBuscadorEscuelas{display:none!important}}
@@ -535,7 +535,7 @@
 <button type="button" id="abrirBuscadorEscuelas" aria-controls="ventanaBuscadorEscuelas" aria-expanded="false">Buscar escuela</button>
 <div id="ventanaBuscadorEscuelas" role="region" aria-label="Buscador de centros de trabajo" hidden>
     <div id="barraBuscadorEscuelas"><span>Buscador de escuelas</span><button type="button" id="minimizarBuscadorEscuelas" aria-label="Minimizar buscador de escuelas">&#8722; Minimizar</button></div>
-    <iframe id="marcoBuscadorEscuelas" title="Buscador de Centros de Trabajo - Sinaloa" data-src="ESCUELAS.html"></iframe>
+    <iframe id="marcoBuscadorEscuelas" title="Buscador de Centros de Trabajo - Sinaloa" data-src="ESCUELAS.html?v=compacto1"></iframe>
 </div>
 <script>
 (() => {
@@ -548,7 +548,13 @@
         ventana.hidden = !activa;
         abrir.setAttribute('aria-expanded', String(activa));
         abrir.textContent = activa ? 'Minimizar buscador' : 'Buscar escuela';
-        if (activa) minimizar.focus();
+        if (activa) {
+            try {
+                const entrada = marco.contentDocument && marco.contentDocument.getElementById('searchInput');
+                if (entrada) entrada.focus();
+                else minimizar.focus();
+            } catch (_) { minimizar.focus(); }
+        }
         else if (devolverFoco) abrir.focus();
     }
     abrir.addEventListener('click', () => mostrar(ventana.hidden));
@@ -566,11 +572,12 @@
     marco.addEventListener('load', () => {
         try {
             const documento = marco.contentDocument;
+            if (!ventana.hidden) documento.getElementById('searchInput')?.focus();
             documento.addEventListener('keydown', alPresionarTecla);
             const resultados = documento.getElementById('resultsContainer');
             if (!resultados) return;
             const estilo = documento.createElement('style');
-            estilo.textContent = '.school-card{cursor:pointer}.school-card:focus-visible{outline:3px solid #667eea;outline-offset:-3px}';
+            estilo.textContent = '.school-card{cursor:pointer}.school-card:focus-visible{outline:2px solid #72777e;outline-offset:-3px}';
             documento.head.appendChild(estilo);
             function prepararTarjetas() {
                 resultados.querySelectorAll('.school-card').forEach(tarjeta => {
