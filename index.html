@@ -142,7 +142,6 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
             <select id="nivel" class="editable" onchange="cambiarModalidad()">
                 <option value="PRIMARIA">PRIMARIA</option>
                 <option value="SECUNDARIA">SECUNDARIA</option>
-                <option value="AMBOS">PRIMARIA Y SECUNDARIA</option>
             </select>
             <div id="nivelWarning">⚠️ La clave no corresponde a este nivel</div>
         </div>
@@ -200,8 +199,11 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
     </div>
 
 </section>
+<div class="no-print" style="margin:16px 0;">
+    <button type="button" id="alternarSegundaEscuela" class="btn-school" onclick="alternarSegundaEscuela()" aria-controls="escuelaSecundaria" aria-expanded="false" aria-label="Añadir segunda escuela"><span id="simboloSegundaEscuela" aria-hidden="true">+</span> <span id="textoSegundaEscuela">Añadir segunda escuela</span></button>
+</div>
 <section id="escuelaSecundaria" hidden>
-<div class="row"><div class="field"><label>TRÁMITE SECUNDARIA:</label><select id="tramite2" class="editable"><option value="CERTIF. TOTAL">CERTIF. TOTAL</option><option value="CERTIF. TOTAL CON CORRECCION">CERTIF. TOTAL CON CORRECCION</option><option value="CERTIF. PARCIAL">CERTIF. PARCIAL</option></select></div></div>
+<div class="row"><div class="field"><label for="nivel2">NIVEL SEGUNDA ESCUELA:</label><select id="nivel2" class="editable" onchange="cambiarModalidad()"><option value="PRIMARIA">PRIMARIA</option><option value="SECUNDARIA" selected>SECUNDARIA</option></select></div><div class="field"><label>TRÁMITE SEGUNDA ESCUELA:</label><select id="tramite2" class="editable"><option value="CERTIF. TOTAL">CERTIF. TOTAL</option><option value="CERTIF. TOTAL CON CORRECCION">CERTIF. TOTAL CON CORRECCION</option><option value="CERTIF. PARCIAL">CERTIF. PARCIAL</option></select></div></div>
     <div class="foraneo-bar">
         <label for="toggleForaneo2">🏫 FORÁNEO:</label>
         <label class="toggle-switch">
@@ -212,7 +214,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
     </div>
 
     <div class="section-title">
-        <span>SECUNDARIA:</span><button type="button" class="btn-school no-print" onclick="abrirBuscadorPara(2)">Buscar secundaria</button>
+        <span id="tituloSegundaEscuela">SEGUNDA ESCUELA: SECUNDARIA</span><button type="button" class="btn-school no-print" onclick="abrirBuscadorPara(2)">Buscar escuela</button>
         <div class="cycle-box">
             <label>CICLO:</label>
             <input type="text" id="ciclo2" list="listaCiclos" placeholder="Ej. 2018-2019" class="editable">
@@ -360,7 +362,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
         // 5. APLICA NIVEL AL SELECT
         function aplicarNivel(clave) {
             const nivelDetectado = detectarNivel(clave);
-            if (nivelDetectado && nivelSelect.value !== 'AMBOS') {
+            if (nivelDetectado) {
                 nivelSelect.value = nivelDetectado;
                 nivelSelect.classList.add('nivel-autodetectado');
                 setTimeout(() => nivelSelect.classList.remove('nivel-autodetectado'), 2000);
@@ -372,7 +374,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
         // 6. VERIFICA NIVEL MANUAL
         function verificarNivelManual() {
             const nivelDetectado = detectarNivel(claveInput.value.trim());
-            if (nivelDetectado && nivelDetectado !== (nivelSelect.value === 'AMBOS' ? 'PRIMARIA' : nivelSelect.value)) {
+            if (nivelDetectado && nivelDetectado !== nivelSelect.value) {
                 nivelWarning.style.display = 'block';
                 nivelSelect.parentElement.classList.add('nivel-warning');
             } else {
@@ -391,7 +393,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
             } else {
                 const val = nombreInput.value.trim().toUpperCase();
                 const candidatos = escuelasDB.filter(e => e.centro && e.centro.toUpperCase() === val);
-                match = candidatos.find(e => detectarNivel(e.clave) === (nivelSelect.value === 'AMBOS' ? 'PRIMARIA' : nivelSelect.value)) || candidatos[0];
+                match = candidatos.find(e => detectarNivel(e.clave) === nivelSelect.value) || candidatos[0];
             }
             if (match) {
                 claveInput.value     = match.clave;
@@ -488,15 +490,29 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
         }
 
         let destinoEscuela = 1;
+        let segundaEscuelaActiva = false;
         const guardadosParciales = new Set();
         const campo = id => document.getElementById(id);
         const valor = id => campo(id).value.trim();
+        function alternarSegundaEscuela() {
+            segundaEscuelaActiva = !segundaEscuelaActiva;
+            if (segundaEscuelaActiva && !valor('clave2')) {
+                campo('nivel2').value = nivelSelect.value === 'PRIMARIA' ? 'SECUNDARIA' : 'PRIMARIA';
+            }
+            if (!segundaEscuelaActiva) destinoEscuela = 1;
+            cambiarModalidad();
+        }
         function cambiarModalidad() {
-            const doble = nivelSelect.value === 'AMBOS';
-            campo('escuelaSecundaria').hidden = !doble;
-            campo('avisoDobleNivel').hidden = !doble;
-            campo('tituloTramite').textContent = doble ? 'TRÁMITE PRIMARIA:' : 'TRAMITE:';
-            campo('tituloEscuelaPrincipal').textContent = doble ? 'PRIMARIA:' : 'DATOS DE LA ESCUELA:';
+            campo('escuelaSecundaria').hidden = !segundaEscuelaActiva;
+            campo('avisoDobleNivel').hidden = !segundaEscuelaActiva;
+            campo('tituloTramite').textContent = 'TRAMITE:';
+            campo('tituloEscuelaPrincipal').textContent = segundaEscuelaActiva ? 'PRIMERA ESCUELA: ' + nivelSelect.value : 'DATOS DE LA ESCUELA:';
+            campo('tituloSegundaEscuela').textContent = 'SEGUNDA ESCUELA: ' + valor('nivel2');
+            const boton = campo('alternarSegundaEscuela');
+            boton.setAttribute('aria-expanded', String(segundaEscuelaActiva));
+            boton.setAttribute('aria-label', segundaEscuelaActiva ? 'Quitar segunda escuela' : 'Añadir segunda escuela');
+            campo('simboloSegundaEscuela').textContent = segundaEscuelaActiva ? '−' : '+';
+            campo('textoSegundaEscuela').textContent = segundaEscuelaActiva ? 'Quitar segunda escuela' : 'Añadir segunda escuela';
             verificarNivelManual();
         }
         function activarForaneoSegundo(activo) {
@@ -519,7 +535,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
             const candidatos = escuelasDB.filter(e => porClave
                 ? e.clave && e.clave.toUpperCase() === valor('clave2').toUpperCase()
                 : e.centro && e.centro.toUpperCase() === valor('nombreEscuela2').toUpperCase());
-            const escuela = candidatos.find(e => detectarNivel(e.clave) === 'SECUNDARIA') || candidatos[0];
+            const escuela = candidatos.find(e => detectarNivel(e.clave) === valor('nivel2')) || candidatos[0];
             if (escuela) colocarEscuela(escuela, 2);
         }
         function colocarEscuela(escuela, destino) {
@@ -528,17 +544,19 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
                 ['turno',escuela.turno],['entidad',escuela.entidad || 'SINALOA'],['localidad',escuela.localidad]]) {
                 campo(id + sufijo).value = dato || '';
             }
+            if (destino === 2) {
+                const nivel = detectarNivel(escuela.clave);
+                if (nivel) campo('nivel2').value = nivel;
+                cambiarModalidad();
+            }
             if (destino === 1) {
                 aplicarNivel(escuela.clave);
+                cambiarModalidad();
                 verificarNivelManual();
             }
         }
         function recibirEscuelaSeleccionada(escuela) {
-            const detectado = detectarNivel(escuela.clave);
-            const destino = nivelSelect.value === 'AMBOS' && detectado
-                ? (detectado === 'SECUNDARIA' ? 2 : 1) : destinoEscuela;
-            if (destino === 2 && nivelSelect.value !== 'AMBOS') destinoEscuela = 1;
-            const real = nivelSelect.value === 'AMBOS' ? destino : 1;
+            const real = segundaEscuelaActiva && destinoEscuela === 2 ? 2 : 1;
             campo(real === 2 ? 'toggleForaneo2' : 'toggleForaneo').checked = false;
             if (real === 2) activarForaneoSegundo(false);
             else activarForaneo(false);
@@ -548,7 +566,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
         campo('nombreEscuela2').addEventListener('input', () => completarSegundo(false));
 
         function construirSolicitudes() {
-            const doble = nivelSelect.value === 'AMBOS';
+            const doble = segundaEscuelaActiva;
             const comun = {
                 fecha: valor('fecha'), apellidoPat: valor('apellidoPat').toUpperCase(),
                 apellidoMat: valor('apellidoMat').toUpperCase(), nombre: valor('nombre').toUpperCase(),
@@ -560,7 +578,7 @@ body.imprimeSolicitudes>#impresionSolicitudes{display:block!important}
                 const foraneo = campo('toggleForaneo' + s).checked;
                 return { ...comun, atiende: foraneo ? 'ARCHIVO OTROS ESTADOS' : 'ARCHIVO SINALOA',
                     tramite: valor('tramite' + s).toUpperCase(),
-                    nivel: doble ? (destino === 1 ? 'PRIMARIA' : 'SECUNDARIA') : nivelSelect.value,
+                    nivel: destino === 2 ? valor('nivel2') : nivelSelect.value,
                     ciclo: valor('ciclo' + s), nombreEscuela: valor('nombreEscuela' + s).toUpperCase(),
                     clave: valor('clave' + s).toUpperCase(), turno: valor('turno' + s).toUpperCase(),
                     entidad: valor('entidad' + s).toUpperCase(), localidad: valor('localidad' + s).toUpperCase(),
